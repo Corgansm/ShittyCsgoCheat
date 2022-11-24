@@ -479,10 +479,10 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 0, 0.f }, bottom, view_matrix)) {
                         const float h = bottom.y - top.y;
                         const float w = h * 0.35f;
-                        
+                        const float distance = _dist * 0.0254f;
 
 
-                        ImGui::GetBackgroundDrawList()->AddCircle({ top.x - w, top.y }, 5 , ImColor(1.f, 1.f, 1.f));
+                        ImGui::GetBackgroundDrawList()->AddCircle({ top.x - w, top.y }, static_cast<int>(1.5 / sqrt(distance)) , ImColor(1.f, 1.f, 1.f));
 
                     }
                 }
