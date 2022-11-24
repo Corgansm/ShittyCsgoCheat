@@ -446,7 +446,11 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 float _dist = (float)trunc(sqrt(pow((entity_pos.x - local_pos.x), 2) + pow((entity_pos.y - local_pos.y), 2)) / 100);
 
 
-               
+                    if (FOV == 1) {
+                        
+                            DWORD LocalBase = memory::read<DWORD>(handle, client + offsets::local_player);
+                            memory::write(handle, LocalBase + offsets::m_iFov, FOV2);
+                        }
 
 
                 if (memory::read<bool>(handle, player + offsets::dormant)) {
