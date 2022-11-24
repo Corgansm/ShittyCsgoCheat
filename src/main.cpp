@@ -197,7 +197,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
     std::cout << "Thanks! Your crosshair is " << crosshair << endl;
     std::cout << "" << endl;
-    Sleep(500);
+    Sleep(200);
     
 
     std::cout << "Would you like Box ESP?" << endl;
@@ -207,7 +207,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
     std::cout << "Thanks! Your Box ESP is " << BoxESP << endl;
     std::cout << "" << endl;
 
-    Sleep(500);
+    Sleep(200);
 
 
     std::cout << "Would you like a Head Dot?" << endl;
@@ -216,7 +216,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
     std::cout << "Thanks! Your Head Dot is " << Headdot << endl;
     std::cout << "" << endl;
-    Sleep(500);
+    Sleep(200);
 
 
     std::cout << "Would you like to change your fov?" << endl;
@@ -229,7 +229,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
         std::cout << "Thanks! Your FOV is " << FOV2 << endl;
         std::cout << "" << endl;
     }
-    Sleep(500);
+    Sleep(200);
     //*/
     std::cout << "Restart to change your settings..." << endl;
 
