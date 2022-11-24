@@ -473,9 +473,19 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
                 auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
+                
+                
+                if (Headdot == 1) {
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 0, 0.f }, bottom, view_matrix)) {
+                        const float h = bottom.y - top.y;
+                        const float w = h * 0.35f;
+                        
 
-               
 
+                        ImGui::GetBackgroundDrawList()->AddCircle({ top.x - w, top.y }, 5 , ImColor(1.f, 1.f, 1.f));
+
+                    }
+                }
 
                
                 if (BoxESP == 1) {
