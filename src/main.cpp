@@ -191,7 +191,47 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
     int FOV2 = 110;
     //* // just add a flash at the start to get the code back
 
+    std::cout << "Would you like a crosshair? 0 No, 1 Yes" << endl;
+
+    std::cin >> crosshair;
+
+    std::cout << "Thanks! Your crosshair is " << crosshair << endl;
+    std::cout << "" << endl;
+    Sleep(500);
     
+
+    std::cout << "Would you like Box ESP?" << endl;
+
+    std::cin >> BoxESP;
+
+    std::cout << "Thanks! Your Box ESP is " << BoxESP << endl;
+    std::cout << "" << endl;
+
+    Sleep(500);
+
+
+    std::cout << "Would you like a Head Dot?" << endl;
+
+    std::cin >> Headdot;
+
+    std::cout << "Thanks! Your Head Dot is " << Headdot << endl;
+    std::cout << "" << endl;
+    Sleep(500);
+
+
+    std::cout << "Would you like to change your fov?" << endl;
+    std::cout << "" << endl;
+    std::cin >> FOV;
+
+    if (FOV == 1) {
+        std::cout << "Enter your Fov" << endl;
+        std::cin >> FOV2;
+        std::cout << "Thanks! Your FOV is " << FOV2 << endl;
+        std::cout << "" << endl;
+    }
+    Sleep(500);
+    //*/
+    std::cout << "Restart to change your settings..." << endl;
 
 
     if (!FreeConsole()) {
