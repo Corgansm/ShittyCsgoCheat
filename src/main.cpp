@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <format>
 
 #include "memory.hpp"
@@ -446,6 +446,15 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 float _dist = (float)trunc(sqrt(pow((entity_pos.x - local_pos.x), 2) + pow((entity_pos.y - local_pos.y), 2)) / 100);
 
 
+                if (crosshair == 1) {
+                    {
+                            ImGui::GetBackgroundDrawList()->AddRectFilled({ 962, 539 }, { 968 , 541 }, ImColor(.8f, 0.f, 0.f));
+                            ImGui::GetBackgroundDrawList()->AddRectFilled({ 958, 539 }, { 952 , 541 }, ImColor(.8f, 0.f, 0.f)); 
+                            ImGui::GetBackgroundDrawList()->AddRectFilled({ 959, 537 }, { 961, 532 }, ImColor(.8f, 0.f, 0.f));
+                            ImGui::GetBackgroundDrawList()->AddRectFilled({ 959, 543 }, { 961, 548 }, ImColor(.8f, 0.f, 0.f));
+
+                        }
+
                     if (FOV == 1) {
                         
                             DWORD LocalBase = memory::read<DWORD>(handle, client + offsets::local_player);
@@ -477,8 +486,10 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
                 auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
-                
-                
+
+               
+
+
                 if (Headdot == 1) {
                     if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 0, 0.f }, bottom, view_matrix)) {
                         const float h = bottom.y - top.y;
@@ -490,8 +501,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                     }
                 }
-
-               
                 if (BoxESP == 1) {
                     if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
                         const float h = bottom.y - top.y;
@@ -503,7 +512,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 }
             }
         }
-    
+    }
 
         ImGui::Render();
 
