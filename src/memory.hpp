@@ -63,3 +63,6 @@ namespace memory {
         WriteProcessMemory(process, reinterpret_cast<LPVOID>(address), &value, sizeof(T), nullptr);
     }
 }
+
+
+
