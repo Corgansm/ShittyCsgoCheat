@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <format>
 
 #include "memory.hpp"
@@ -12,6 +12,7 @@
 #include <imgui_impl_win32.h>
 #include <chrono>
 #include <thread>
+#include "Main.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -29,13 +30,6 @@ namespace offsets {
     constexpr auto origin = 0x138;
     constexpr auto dormant = 0xED;
     constexpr auto Health = 0x100;
-    constexpr BYTE useCustomMin = 0x9D8;
-    constexpr BYTE useCustomMax = 0x9D9;
-    constexpr float flCustomMin = 0x9DC;
-    constexpr float flCustomMax = 0x9E0;
-    constexpr float DT_EnvTonemapController = 69;
-    constexpr auto MoveType = 0x25C;
-    constexpr auto m_bIsScoped = 0x9974;
     constexpr auto Crosshair = 0x11838;
     constexpr auto ForceAttack = 0x322AC7C;
 }
@@ -123,11 +117,6 @@ bool create_directx(HWND window) {
 }
 
 
-
-
-
-
-
 // application entry point
 INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
     // allocate this program a console
@@ -203,8 +192,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
     int Headdot = 1;
     int FOV = 1;
     int FOV2 = 110;
-    int TriggerBot = 1;
-
     //* // just add a flash at the start to get the code back
 
     std::cout << "Would you like a crosshair? 0 No, 1 Yes" << endl;
@@ -226,23 +213,12 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
     Sleep(200);
 
 
-
     std::cout << "Would you like a Head Dot?" << endl;
 
     std::cin >> Headdot;
 
     std::cout << "Thanks! Your Head Dot is " << Headdot << endl;
     std::cout << "" << endl;
-    Sleep(200);
-
-
-    std::cout << "Would you like TriggerBot?" << endl;
-
-    std::cin >> TriggerBot;
-
-    std::cout << "Thanks! Your TriggerBot is " << TriggerBot << endl;
-    std::cout << "" << endl;
-
     Sleep(200);
 
 
@@ -256,13 +232,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
         std::cout << "Thanks! Your FOV is " << FOV2 << endl;
         std::cout << "" << endl;
     }
-
-
-
-
-
-
-
     Sleep(200);
     //*/
     std::cout << "Restart to change your settings..." << endl;
@@ -504,7 +473,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 const auto LocalP = memory::read<DWORD>(handle, client + offsets::local_player);
                 const auto EntityP = player;
 
-
                 Vector local_pos{
                     memory::read<float>(handle, LocalP + offsets::origin),
                     memory::read<float>(handle, LocalP + offsets::origin + 0x4),
@@ -531,17 +499,10 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     }
 
                     if (FOV == 1) {
-                        DWORD Scoped = memory::read<DWORD>(handle, LocalP + offsets::m_bIsScoped);
-                        if (!Scoped) {
-                            DWORD LocalBase = memory::read<DWORD>(handle, client + offsets::local_player);
-                            memory::write(handle, LocalBase + offsets::m_iFov, FOV2);
-                        }
+
+                        DWORD LocalBase = memory::read<DWORD>(handle, client + offsets::local_player);
+                        memory::write(handle, LocalBase + offsets::m_iFov, FOV2);
                     }
-
-
-
-
-
 
 
                     if (memory::read<bool>(handle, player + offsets::dormant)) {
@@ -592,88 +553,84 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                             ImGui::GetBackgroundDrawList()->AddRect({ top.x - w, top.y }, { top.x + w, bottom.y }, ImColor(1.f, 1.f, 1.f));
                         }
                     }
-
-
-
-
-
-                    ImGui::Render();
-
-
-
-
-                    constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-                    device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
-                    device_context->ClearRenderTargetView(render_target_view, clear_color);
-
-                    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-                    swap_chain->Present(0U, 0U);
-
-                }
-
-
-
-
-                    ImGui_ImplDX11_Shutdown();
-                    ImGui_ImplWin32_Shutdown();
-                    ImGui::DestroyContext();
-
-                    if (swap_chain) {
-                        swap_chain->Release();
-                        swap_chain = nullptr;
-                    }
-
-                    if (device_context) {
-                        device_context->Release();
-                        device_context = nullptr;
-                    }
-
-                    if (device) {
-                        device->Release();
-                        device = nullptr;
-                    }
-
-                    if (render_target_view) {
-                        render_target_view->Release();
-                        render_target_view = nullptr;
-                    }
-
-                    DestroyWindow(window);
-                    UnregisterClassW(wc.lpszClassName, wc.hInstance);
-
-                    CloseHandle(handle);
-
-                    return TRUE;
-
                     if (TriggerBot == 1) {
-                            const auto& localPlayer = memory::read<std::uintptr_t>(handle, client + offsets::local_player);
-                            const auto& localHealth = memory::read<std::int32_t>(handle, client + offsets::Health);
+                        const auto& localPlayer = memory::read<std::uintptr_t>(handle, client + offsets::local_player);
+                        const auto& localHealth = memory::read<std::int32_t>(handle, client + offsets::Health);
 
-                            if (!GetAsyncKeyState(VK_XBUTTON2))
-                                continue;
+                        if (!GetAsyncKeyState(VK_XBUTTON2))
+                            continue;
 
-                            const auto& crosshairid = memory::read<int>(handle, localPlayer + offsets::Crosshair);
+                        const auto& crosshairid = memory::read<int>(handle, localPlayer + offsets::Crosshair);
 
-                            if (!crosshairid || crosshairid > 64)
-                                continue;
+                        if (!crosshairid || crosshairid > 64)
+                            continue;
 
-                            const auto& enemy = memory::read<int>(handle, client + offsets::entity_list + (crosshairid - 1) * 0x10);
+                        const auto& enemy = memory::read<int>(handle, client + offsets::entity_list + (crosshairid - 1) * 0x10);
 
-                            if (!memory::read<int>(handle, enemy + offsets::Health))
-                                continue;
+                        if (!memory::read<int>(handle, enemy + offsets::Health))
+                            continue;
 
-                            if (memory::read<int>(handle, enemy + offsets::team_num)
-                                == memory::read<int>(handle, localPlayer + offsets::team_num))
-                                continue;
+                        memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
+                        auto start = std::chrono::steady_clock::now();
 
-                            memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
-
-                            memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4);
-                        }
-
-                        return 0;
+                        
                     }
+
+                    else { memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4); }
                 }
             }
         }
+
+        ImGui::Render();
+
+
+
+        constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+        device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
+        device_context->ClearRenderTargetView(render_target_view, clear_color);
+
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+        swap_chain->Present(0U, 0U);
+
+
+
+    }
+
+
+
+
+
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
+    if (swap_chain) {
+        swap_chain->Release();
+        swap_chain = nullptr;
+    }
+
+    if (device_context) {
+        device_context->Release();
+        device_context = nullptr;
+    }
+
+    if (device) {
+        device->Release();
+        device = nullptr;
+    }
+
+    if (render_target_view) {
+        render_target_view->Release();
+        render_target_view = nullptr;
+    }
+
+    DestroyWindow(window);
+    UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+    CloseHandle(handle);
+
+    return TRUE;
+
+    
+}
