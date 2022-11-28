@@ -48,6 +48,9 @@ namespace offsets {
     constexpr auto ModelIndex = 0x258;
     constexpr auto dwWeaponTableIndex = 0x326C;
     constexpr auto m_hViewModel = 0x3308;
+    constexpr auto dwRadarBase = 0x523394C;
+    constexpr auto dwClientState_PlayerInfo = 0x52C0;
+    constexpr auto dwPlayerResource = 0x3229020;
 }
 
 
@@ -300,7 +303,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
     }
 
-
+    
 
 
     Sleep(200);
@@ -319,15 +322,11 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
 
-    if (!FreeConsole()) {
-        return FALSE;
-    }
+
 
     const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
-    if (!handle) {
-        return FALSE;
-    }
+
 
     // create our window class to specify options for our window
     const WNDCLASSEXW wc{
@@ -512,6 +511,8 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
+        
+
 
         if (crosshair == 1) {
             const ImVec2 p0 = ImGui::GetItemRectMin();
@@ -527,6 +528,25 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
             const auto view_matrix = memory::read<ViewMatrix>(handle, client + offsets::view_matrix);
 
             for (int i = 1; i < 32; ++i) {
+
+                class player_info {
+                private:
+                    char __pad[0x10];
+                public:
+                    char name[32];
+                };
+
+
+                const auto client_state = memory::read<DWORD>(handle, engine + offsets::dwClientState);
+                const auto user_info_table = memory::read<DWORD>(handle, client_state + offsets::dwClientState_PlayerInfo);
+                const auto items = memory::read<int>(handle, user_info_table + 0x40) + 0xC;
+                player_info Tes5t = memory::read<player_info>(handle, memory::read<DWORD>(handle, (items + 0x28) + (i * 0x34)));
+                const char* player_name = Tes5t.name; // your name is here
+
+
+
+
+
                 const auto player = memory::read<DWORD>(handle, client + offsets::entity_list + i * 0x10);
 
 
@@ -739,14 +759,21 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                             io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
                             ImFont* Small = io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
 
-                            std::string s = std::to_string(Health);
+
+
+                         //   std::string s = std::to_string(Health);
+                         //   std::string s = std::to_string(distance);
+                            std::string s = player_name;
                             char const* pchar = s.c_str();
                             const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
 
-
-
-                            ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
                             
+                            
+
+                           // ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
+                            
+
+
                         }
                         if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
                             const float h = bottom.y - top.y;
@@ -760,7 +787,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
 
-
+                    
 
 
 
@@ -782,10 +809,37 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
 
+
+            // LOOOOOOOK
+              // LOOOOOOOK
+              // LOOOOOOOK
+              // LOOOOOOOK
+              // LOOOOOOOK
+              // LOOOOOOOK
+              // LOOOOOOOK
+            // PLACE DEBUG STUFF HERE FOR CONSOLE
+
+            for (int i = 1; i < 32; ++i) {
+
+                class player_info {
+                private:
+                    char __pad[0x10];
+                public:
+                    char name[32];
+                };
+
+
+                const auto address = memory::read<DWORD>(handle, client + offsets::dwPlayerResource);
+                string m_pPlayerNames = m_iPlayerC4 - 0xC7C;
+                string pName = memory::read<string>(handle, address + (m_pPlayerNames + (4 * index));
+                
+                std::string s = player_name;
+                char const* pchar = s.c_str();
+                std::cout << pchar << endl;
+            }
+            
         }
-
-
-
+        
 
 
         ImGui_ImplDX11_Shutdown();
