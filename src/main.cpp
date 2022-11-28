@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <format>
 
 #include "memory.hpp"
@@ -819,7 +819,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
               // LOOOOOOOK
             // PLACE DEBUG STUFF HERE FOR CONSOLE
 
-            
+
             }
             
         
