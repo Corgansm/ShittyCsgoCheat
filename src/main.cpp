@@ -819,23 +819,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
               // LOOOOOOOK
             // PLACE DEBUG STUFF HERE FOR CONSOLE
 
-            for (int i = 1; i < 32; ++i) {
-
-                class player_info {
-                private:
-                    char __pad[0x10];
-                public:
-                    char name[32];
-                };
-
-
-                const auto address = memory::read<DWORD>(handle, client + offsets::dwPlayerResource);
-                string m_pPlayerNames = m_iPlayerC4 - 0xC7C;
-                string pName = memory::read<string>(handle, address + (m_pPlayerNames + (4 * index));
-                
-                std::string s = player_name;
-                char const* pchar = s.c_str();
-                std::cout << pchar << endl;
+            
             }
             
         }
