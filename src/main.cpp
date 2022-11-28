@@ -47,6 +47,7 @@ namespace offsets {
     constexpr auto m_iShotsFired = 0x103E0;
     constexpr auto ModelIndex = 0x258;
     constexpr auto dwWeaponTableIndex = 0x326C;
+    constexpr auto m_hViewModel = 0x3308;
 }
 
 
@@ -62,7 +63,7 @@ int GetWeaponId(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) // You could 
 
     DWORD dwBaseCombatWeapon = memory::read<DWORD>(handle, client + offsets::entity_list + dwBaseCombatWeaponIndex * 0x10) - 0x10;
 
-    return memory::read<int> (handle, dwBaseCombatWeapon + 0x1148 + 0x40 + 0x194);
+    return memory::read<int>(handle, dwBaseCombatWeapon + 0x1148 + 0x40 + 0x194);
 }
 
 
@@ -122,6 +123,27 @@ static bool world_to_screen(const Vector& world, Vector& screen, const ViewMatri
 
     const float x = world.x * vm[0][0] + world.y * vm[0][1] + world.z * vm[0][2] + vm[0][3];
     const float y = world.x * vm[1][0] + world.y * vm[1][1] + world.z * vm[1][2] + vm[1][3];
+
+    w = 1.f / w;
+    float nx = x * w;
+    float ny = y * w;
+
+    const ImVec2 size = ImGui::GetIO().DisplaySize;
+
+    screen.x = (size.x * 0.5f * nx) + (nx + size.x * 0.5f);
+    screen.y = -(size.y * 0.5f * ny) + (ny + size.y * 0.5f);
+
+    return true;
+}
+static bool world_to_screen2(const Vector2& world, Vector2& screen, const ViewMatrix& vm) noexcept {
+    float w = vm[3][0] * world.x + vm[3][1] * world.y + vm[3][2];
+
+    if (w < 0.001f) {
+        return false;
+    }
+
+    const float x = world.x * vm[0][0] + world.y * vm[0][1];
+    const float y = world.x * vm[1][0] + world.y * vm[1][1];
 
     w = 1.f / w;
     float nx = x * w;
@@ -538,6 +560,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 Vector bottom;
 
 
+
                 const auto LocalP = memory::read<DWORD>(handle, client + offsets::local_player);
                 const auto EntityP = player;
 
@@ -558,103 +581,136 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
                 if (crosshair == 1) {
-                        ImGui::GetBackgroundDrawList()->AddRectFilled({ 962, 539 }, { 968 , 541 }, ImColor(.8f, 0.f, 0.f));
-                        ImGui::GetBackgroundDrawList()->AddRectFilled({ 958, 539 }, { 952 , 541 }, ImColor(.8f, 0.f, 0.f));
-                        ImGui::GetBackgroundDrawList()->AddRectFilled({ 959, 537 }, { 961, 532 }, ImColor(.8f, 0.f, 0.f));
-                        ImGui::GetBackgroundDrawList()->AddRectFilled({ 959, 543 }, { 961, 548 }, ImColor(.8f, 0.f, 0.f));
+                    ImGui::GetBackgroundDrawList()->AddRectFilled({ 962, 539 }, { 968 , 541 }, ImColor(.8f, 0.f, 0.f));
+                    ImGui::GetBackgroundDrawList()->AddRectFilled({ 958, 539 }, { 952 , 541 }, ImColor(.8f, 0.f, 0.f));
+                    ImGui::GetBackgroundDrawList()->AddRectFilled({ 959, 537 }, { 961, 532 }, ImColor(.8f, 0.f, 0.f));
+                    ImGui::GetBackgroundDrawList()->AddRectFilled({ 959, 543 }, { 961, 548 }, ImColor(.8f, 0.f, 0.f));
+                }
+
+
+
+                if (FOV == 1) {
+
+                    DWORD LocalBase = memory::read<DWORD>(handle, client + offsets::local_player);
+                    DWORD Scoped = memory::read<DWORD>(handle, LocalP + offsets::Scoped_1);
+                    const auto& weapons = memory::read<DWORD>(handle, LocalPlayer + offsets::MyWeapons);
+
+
+                    auto zoom = memory::read<int>(handle, LocalPlayer + offsets::m_zoomLevel);
+                    if (!Scoped && (!GetAsyncKeyState(VK_XBUTTON2)))
+                    {
+                        memory::write(handle, LocalBase + offsets::m_iFov, FOV2);
+                    }
+                    if (!Scoped && (GetAsyncKeyState(VK_XBUTTON2)))
+                    {
+                        memory::write(handle, LocalBase + offsets::m_iFov, FOV3 * 3);
+                    }
+                    if (Scoped && (GetAsyncKeyState(VK_XBUTTON2)))
+                    {
+                        memory::write(handle, LocalBase + offsets::m_iFov, FOV3 / 2);
                     }
 
-                
+                }
 
-                    if (FOV == 1) {
 
-                        DWORD LocalBase = memory::read<DWORD>(handle, client + offsets::local_player);
-                        DWORD Scoped = memory::read<DWORD>(handle, LocalP + offsets::Scoped_1);
-                        const auto& weapons = memory::read<DWORD>(handle, LocalPlayer + offsets::MyWeapons);
+
+
+
+
+
+                if (bhop == 1) {
+                    const auto& flags = memory::read<bool>(handle, LocalPlayer + offsets::Flags);
+
+
+                    if (GetAsyncKeyState(VK_SPACE)) {
+
+
+                        time_t updateTimer = 0;
+                        time_t curtime = time(NULL);
+
+                        updateTimer = curtime + 1;
+
+                        if (flags & (1 << 0) && rand() % 100 + 1 <= 100)
+                            memory::write<BYTE>(handle, client + offsets::Jump, 6);
+                    }
+                }
+
+
+                if (memory::read<bool>(handle, player + offsets::dormant)) {
+                    continue;
+                }
+
+                if (memory::read<int>(handle, player + offsets::team_num) == local_team) {
+                    continue;
+                }
+
+                if (memory::read<int>(handle, player + offsets::life_state) != 0) {
+                    continue;
+                }
+
+
+
+
+
+                if (triggerbot == 1) {
+                    if (GetAsyncKeyState(VK_XBUTTON1)) {
+                        const auto& localHealth = memory::read<int32_t>(handle, LocalPlayer + offsets::Health);
+                        const auto& localTeam = memory::read<uintptr_t>(handle, LocalPlayer + offsets::team_num);
+                        const auto& shotsFired = memory::read<int32_t>(handle, LocalPlayer + offsets::m_iShotsFired);
+
+                        time_t updateTimer = 0;
+                        time_t curtime = time(NULL);
+                        updateTimer = curtime + 1;
+                        memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4);
+                        const auto& crosshairID = memory::read<int32_t>(handle, LocalPlayer + offsets::Crosshair);
+                        const auto& entity = memory::read<uintptr_t>(handle, client + offsets::entity_list + (crosshairID - 1) * 0x10);
+
+                        if (!localHealth)
+                            goto skip_trigger;
+
+                        if (!crosshairID || crosshairID > 64)
+                            goto skip_trigger;
+
+                        if (localTeam == memory::read<uintptr_t>(handle, entity + offsets::team_num))
+                            goto skip_trigger;
+
+
                         
-
-                        auto zoom = memory::read<int>(handle, LocalPlayer + offsets::m_zoomLevel);
-                        if (!Scoped && (!GetAsyncKeyState(VK_XBUTTON1)))
-                        {
-                            memory::write(handle, LocalBase + offsets::m_iFov, FOV2);
-                        }
-                        if (!Scoped && (GetAsyncKeyState(VK_XBUTTON1)))
-                        {
-                            memory::write(handle, LocalBase + offsets::m_iFov, FOV3 * 6);
-                        }
-                        if (Scoped && (GetAsyncKeyState(VK_XBUTTON1)))
-                        {
-                            memory::write(handle, LocalBase + offsets::m_iFov, FOV3 / 2);
-                        }
+                        memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
                         
                     }
+                };
+
+            skip_trigger:
 
 
 
 
 
 
-
-                    if (bhop == 1) {
-                        const auto& flags = memory::read<bool>(handle, LocalPlayer + offsets::Flags);
+                auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
 
 
-                        if (GetAsyncKeyState(VK_SPACE)) {
 
 
-                            time_t updateTimer = 0;
-                            time_t curtime = time(NULL);
 
-                            updateTimer = curtime + 1;
 
-                            if (flags & (1 << 0) && rand() % 100 + 1 <= 100)
-                                memory::write<BYTE>(handle, client + offsets::Jump, 6);
-                        }
+                if (Headdot == 1) {
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 5.f, 0.f }, bottom, view_matrix)) {
+                        const float h = bottom.y - top.y;
+                        const float w = h * 0.35f;
+                        const float distance = _dist * 0.0254f;
+
+
+                        ImGui::GetBackgroundDrawList()->AddCircle({ top.x - w, top.y }, static_cast<int>(1.5 / sqrt(distance)), ImColor(1.f, 1.f, 1.f));
+
                     }
+                }
 
+               
+            
+            
 
-
-                    if (memory::read<bool>(handle, player + offsets::dormant)) {
-                        continue;
-                    }
-
-                    if (memory::read<int>(handle, player + offsets::team_num) == local_team) {
-                        continue;
-                    }
-
-                    if (memory::read<int>(handle, player + offsets::life_state) != 0) {
-                        continue;
-                    }
-
-
-
-
-                    
-
-
-
-
-
-
-
-                    auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
-
-
-
-
-
-
-                    if (Headdot == 1) {
-                        if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 0, 0.f }, bottom, view_matrix)) {
-                            const float h = bottom.y - top.y;
-                            const float w = h * 0.35f;
-                            const float distance = _dist * 0.0254f;
-
-
-                            ImGui::GetBackgroundDrawList()->AddCircle({ top.x - w, top.y }, static_cast<int>(1.5 / sqrt(distance)), ImColor(1.f, 1.f, 1.f));
-
-                        }
-                    }
                     if (BoxESP == 1) {
                         
                         if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
@@ -667,72 +723,101 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                         }
                         
                     }
-                    
-
-                    
 
 
 
+                    if (health == 1) {
+                        if (world_to_screen(head_pos + Vector{ 0, 0 , 0.f}, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0 , 0.f}, bottom, view_matrix)) {
+
+                            const float h = bottom.y - top.y;
+                            const float w = h * 0.35f;
+                            const float distance = _dist * 0.03f;
+                            const int test = static_cast<int>(1.5 / sqrt(distance));
+                            const int Health = memory::read<int>(handle, player + offsets::Health);
+
+                            ImGuiIO& io = ImGui::GetIO();
+                            io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
+                            ImFont* Small = io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
+
+                            std::string s = std::to_string(Health);
+                            char const* pchar = s.c_str();
+                            const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
+
+
+
+                            ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
+                            
+                        }
+                        if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
+                            const float h = bottom.y - top.y;
+                            const float w = h * 0.35f;
+                            const float distance = _dist * 0.03f;
+                            const int test = static_cast<int>(1.5 / sqrt(distance));
+                            
+                        }
+                    }
 
 
 
 
-                    
-            
+
+
+
+
+                }
+            }
+
+
+            ImGui::Render();
+
+
+
+            constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+            device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
+            device_context->ClearRenderTargetView(render_target_view, clear_color);
+
+            ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+            swap_chain->Present(0U, 0U);
+
+
+
         }
+
+
+
+
+
+        ImGui_ImplDX11_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+
+        if (swap_chain) {
+            swap_chain->Release();
+            swap_chain = nullptr;
+        }
+
+        if (device_context) {
+            device_context->Release();
+            device_context = nullptr;
+        }
+
+        if (device) {
+            device->Release();
+            device = nullptr;
+        }
+
+        if (render_target_view) {
+            render_target_view->Release();
+            render_target_view = nullptr;
+        }
+
+        DestroyWindow(window);
+        UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+        CloseHandle(handle);
+
+        return TRUE;
+
+
     }
-    
-
-        ImGui::Render();
-
-
-
-        constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-        device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
-        device_context->ClearRenderTargetView(render_target_view, clear_color);
-
-        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-        swap_chain->Present(0U, 0U);
-
-
-
-    }
-
-
-
-
-
-    ImGui_ImplDX11_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-
-    if (swap_chain) {
-        swap_chain->Release();
-        swap_chain = nullptr;
-    }
-
-    if (device_context) {
-        device_context->Release();
-        device_context = nullptr;
-    }
-
-    if (device) {
-        device->Release();
-        device = nullptr;
-    }
-
-    if (render_target_view) {
-        render_target_view->Release();
-        render_target_view = nullptr;
-    }
-
-    DestroyWindow(window);
-    UnregisterClassW(wc.lpszClassName, wc.hInstance);
-
-    CloseHandle(handle);
-
-    return TRUE;
-
-    
-}
