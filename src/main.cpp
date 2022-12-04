@@ -734,247 +734,230 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
                         std::string s = std::to_string(Health);
-                   //      std::string s = std::to_string(distance);
-                   //   std::string s = player_name;
+                        //      std::string s = std::to_string(distance);
+                        //   std::string s = player_name;
                         char const* pchar = s.c_str();
                         const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
 
-                        switch(Health)
-                            Case: 1; {
+                        switch (Health) {
+                        case 1:
 
                             break;
-                        }
-                        Case : 2; {
-
-                            break;
-                        }
-                        Case : 3; {
-
-                            break;
-                        }
-                        Case : 4; {
-
-                            break;
-                        }
-                        Case : 5; {
-
-                            break;
-                        }
-                        Case : 6; {
-
-                            break;
-                        }
-                        Case : 7; {
-
-                            break;
-                        }
-                        Case : 8; {
-
-                            break;
-                        }
-                        Case : 9; {
-
-                            break;
-                        }
-                        Case : 10; {
-
-                            break;
-                        }
-                        Case : 11; {
-
-                            break;
-                        }
-                        Case : 12; {
-
-                            break;
-                        }
-                        Case : 13; {
-
-                            break;
-                        }
-                        Case : 14; {
-
-                            break;
-                        }
-                        Case : 14; {
-
-                            break;
-                        }
-                        Case : 15; {
-
-                            break;
-                        }
-                        Case : 16; {
-
-                            break;
-                        }
-                        Case : 17; {
-
-                            break;
-                        }
-                        Case : 18; {
-
-                            break;
-                        }
-                        Case : 19; {
-
-                            break;
-                        }
-                        Case : 20; {
-
-                            break;
-                        }
-                        Case : 21; {
-
-                            break;
-                        }
-                        Case : 22; {
-
-                            break;
-                        }
-                        Case : 23; {
-
-                            break;
-                        }
-                        Case : 24; {
-
-                            break;
-                        }
-                        Case : 25; {
-
-                            break;
-                        }
-                        Case : 26; {
-
-                            break;
-                        }
-                        Case : 27; {
-
-                            break;
-                        }
-                        Case : 28; {
-
-                            break;
-                        }
-                        Case : 29; {
-
-                            break;
-                        }
-                        Case : 30; {
-
-                            break;
-                        }
-                        Case : 31; {
+                        case 2:
 
                             break;
 
-                        }
-                        Case : 32; {
+                        case 3:
 
                             break;
-                        }
-                        Case : 33; {
+
+                        case 4:
 
                             break;
-                        }
-                        Case : 34; {
+
+                        case 5:
 
                             break;
-                        }
-                        Case : 35; {
+
+                        case 6:
 
                             break;
-                        }
-                        Case : 36; {
+
+                        case 8:
 
                             break;
-                        }
-                        Case : 37; {
+
+                        case 9:
 
                             break;
-                        }
-                        Case : 38; {
+
+                        case 10:
 
                             break;
-                        }
-                        Case : 39; {
+
+                        case 11:
 
                             break;
-                        }
-                        Case : 40; {
+
+                        case 12:
 
                             break;
-                        }
-                        Case : 41; {
+
+                        case 13:
 
                             break;
-                        }
-                        Case : 42; {
+
+                        case 14:
 
                             break;
-                        }
-                        Case : 43; {
+
+                        case 15:
 
                             break;
-                        }
-                        Case : 44; {
+
+                        case 16:
 
                             break;
-                        }
-                        Case : 45; {
+
+                        case 17:
 
                             break;
-                        }
-                        Case : 46; {
+
+                        case 18:
 
                             break;
-                        }
-                        Case : 47; {
+
+                        case 19:
 
                             break;
-                        }
-                        Case : 48; {
+
+                        case 20:
 
                             break;
-                        }
-                        Case : 49; {
+
+                        case 21:
 
                             break;
-                        }
-                        Case : 50; {
+
+                        case 22:
 
                             break;
-                        }
-                        Case : 51; {
+
+                        case 23:
 
                             break;
-                        }
-                        Case : 52; {
+
+                        case 24:
 
                             break;
+
+                        case 25:
+
+                            break;
+
+                        case 26:
+
+                            break;
+
+                        case 27:
+
+                            break;
+
+                        case 28:
+
+                            break;
+
+                        case 29:
+
+                            break;
+
+                        case 30:
+
+                            break;
+
+                        case 31:
+
+                            break;
+
+                        case 32:
+
+                            break;
+
+                        case 33:
+
+                            break;
+
+
+                        case 34:
+
+                            break;
+
+                        case 35:
+
+                            break;
+
+                        case 36:
+
+                            break;
+
+                        case 37:
+
+                            break;
+
+                        case 38:
+
+                            break;
+
+                        case 39:
+
+                            break;
+
+                        case 40:
+
+                            break;
+
+                        case 41:
+
+                            break;
+
+                        case 42:
+
+                            break;
+
+                        case 43:
+
+                            break;
+
+                        case 44:
+
+                            break;
+
+                        case 45:
+
+                            break;
+
+                        case 46:
+
+                            break;
+
+                        case 47:
+
+                            break;
+
+                        case 48:
+
+                            break;
+
+                        case 49:
+
+                            break;
+
+                        case 50:
+
+                            break;
+
+                        case 51:
+
+                            break;
+
+                        default:
+
+                            break;
+
+
+
+
+
+
+
+
                         }
-
-                        
-                        
-
-                        
-
-
-
                     }
                 }
-
-
-
-
-
-
-
-
-
-
             }
         }
+    
+
 
 
         ImGui::Render();
