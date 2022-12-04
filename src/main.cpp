@@ -138,27 +138,6 @@ static bool world_to_screen(const Vector& world, Vector& screen, const ViewMatri
 
     return true;
 }
-static bool world_to_screen2(const Vector2& world, Vector2& screen, const ViewMatrix& vm) noexcept {
-    float w = vm[3][0] * world.x + vm[3][1] * world.y + vm[3][2];
-
-    if (w < 0.001f) {
-        return false;
-    }
-
-    const float x = world.x * vm[0][0] + world.y * vm[0][1];
-    const float y = world.x * vm[1][0] + world.y * vm[1][1];
-
-    w = 1.f / w;
-    float nx = x * w;
-    float ny = y * w;
-
-    const ImVec2 size = ImGui::GetIO().DisplaySize;
-
-    screen.x = (size.x * 0.5f * nx) + (nx + size.x * 0.5f);
-    screen.y = -(size.y * 0.5f * ny) + (ny + size.y * 0.5f);
-
-    return true;
-}
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
@@ -303,7 +282,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
     }
 
-    
+
 
 
     Sleep(200);
@@ -322,11 +301,15 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
 
-
+    if (!FreeConsole()) {
+        return FALSE;
+    }
 
     const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
-
+    if (!handle) {
+        return FALSE;
+    }
 
     // create our window class to specify options for our window
     const WNDCLASSEXW wc{
@@ -511,8 +494,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        
-
 
         if (crosshair == 1) {
             const ImVec2 p0 = ImGui::GetItemRectMin();
@@ -528,6 +509,12 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
             const auto view_matrix = memory::read<ViewMatrix>(handle, client + offsets::view_matrix);
 
             for (int i = 1; i < 32; ++i) {
+                const auto player = memory::read<DWORD>(handle, client + offsets::entity_list + i * 0x10);
+
+
+                if (!player) {
+                    continue;
+                }
 
                 class player_info {
                 private:
@@ -536,23 +523,11 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     char name[32];
                 };
 
-
                 const auto client_state = memory::read<DWORD>(handle, engine + offsets::dwClientState);
                 const auto user_info_table = memory::read<DWORD>(handle, client_state + offsets::dwClientState_PlayerInfo);
                 const auto items = memory::read<int>(handle, user_info_table + 0x40) + 0xC;
                 player_info Tes5t = memory::read<player_info>(handle, memory::read<DWORD>(handle, (items + 0x28) + (i * 0x34)));
                 const char* player_name = Tes5t.name; // your name is here
-
-
-
-
-
-                const auto player = memory::read<DWORD>(handle, client + offsets::entity_list + i * 0x10);
-
-
-                if (!player) {
-                    continue;
-                }
 
                 DWORD LocalPlayer;
                 ReadProcessMemory(handle, (LPVOID)(client + offsets::local_player), &LocalPlayer, sizeof(DWORD), 0);
@@ -578,7 +553,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                 Vector top;
                 Vector bottom;
-
 
 
                 const auto LocalP = memory::read<DWORD>(handle, client + offsets::local_player);
@@ -656,22 +630,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 }
 
 
-                if (memory::read<bool>(handle, player + offsets::dormant)) {
-                    continue;
-                }
-
-                if (memory::read<int>(handle, player + offsets::team_num) == local_team) {
-                    continue;
-                }
-
-                if (memory::read<int>(handle, player + offsets::life_state) != 0) {
-                    continue;
-                }
-
-
-
-
-
                 if (triggerbot == 1) {
                     if (GetAsyncKeyState(VK_XBUTTON1)) {
                         const auto& localHealth = memory::read<int32_t>(handle, LocalPlayer + offsets::Health);
@@ -695,13 +653,34 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                             goto skip_trigger;
 
 
-                        
+
                         memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
-                        
+
                     }
                 };
 
             skip_trigger:
+
+
+
+
+                if (memory::read<bool>(handle, player + offsets::dormant)) {
+                    continue;
+                }
+
+                if (memory::read<int>(handle, player + offsets::team_num) == local_team) {
+                    continue;
+                }
+
+                if (memory::read<int>(handle, player + offsets::life_state) != 0) {
+                    continue;
+                }
+
+
+
+
+
+
 
 
 
@@ -716,7 +695,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
                 if (Headdot == 1) {
-                    if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 5.f, 0.f }, bottom, view_matrix)) {
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 0, 0.f }, bottom, view_matrix)) {
                         const float h = bottom.y - top.y;
                         const float w = h * 0.35f;
                         const float distance = _dist * 0.0254f;
@@ -726,136 +705,328 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                     }
                 }
+                if (BoxESP == 1) {
 
-               
-            
-            
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
 
-                    if (BoxESP == 1) {
-                        
-                        if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
-
-                            const float h = bottom.y - top.y;
-                            const float w = h * 0.35f;
-                            ImGui::GetBackgroundDrawList()->AddRect({ top.x - w, top.y }, { top.x + w, bottom.y }, ImColor(1.f, 1.f, 1.f));
+                        const float h = bottom.y - top.y;
+                        const float w = h * 0.35f;
+                        ImGui::GetBackgroundDrawList()->AddRect({ top.x - w, top.y }, { top.x + w, bottom.y }, ImColor(1.f, 1.f, 1.f));
 
 
-                        }
-                        
                     }
-
-
-
-                    if (health == 1) {
-                        if (world_to_screen(head_pos + Vector{ 0, 0 , 0.f}, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0 , 0.f}, bottom, view_matrix)) {
-
-                            const float h = bottom.y - top.y;
-                            const float w = h * 0.35f;
-                            const float distance = _dist * 0.03f;
-                            const int test = static_cast<int>(1.5 / sqrt(distance));
-                            const int Health = memory::read<int>(handle, player + offsets::Health);
-
-                            ImGuiIO& io = ImGui::GetIO();
-                            io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
-                            ImFont* Small = io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
-
-
-
-                         //   std::string s = std::to_string(Health);
-                         //   std::string s = std::to_string(distance);
-                            std::string s = player_name;
-                            char const* pchar = s.c_str();
-                            const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
-
-                            
-                            
-
-                           // ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
-                            
-
-
-                        }
-                        if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
-                            const float h = bottom.y - top.y;
-                            const float w = h * 0.35f;
-                            const float distance = _dist * 0.03f;
-                            const int test = static_cast<int>(1.5 / sqrt(distance));
-                            
-                        }
-                    }
-
-
-
-
-                    
-
-
 
                 }
+
+                if (health == 1) {
+                    if (world_to_screen(head_pos + Vector{ 0, 0 , 0.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0 , 0.f }, bottom, view_matrix)) {
+
+                        const float h = bottom.y - top.y;
+                        const float w = h * 0.35f;
+                        const float distance = _dist * 0.03f;
+                        const int test = static_cast<int>(1.5 / sqrt(distance));
+                        const int Health = memory::read<int>(handle, player + offsets::Health);
+
+                        ImGuiIO& io = ImGui::GetIO();
+                        io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
+                        ImFont* Small = io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
+
+
+
+                        std::string s = std::to_string(Health);
+                   //      std::string s = std::to_string(distance);
+                   //   std::string s = player_name;
+                        char const* pchar = s.c_str();
+                        const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
+
+                        switch(Health)
+                            Case: 1; {
+
+                            break;
+                        }
+                        Case : 2; {
+
+                            break;
+                        }
+                        Case : 3; {
+
+                            break;
+                        }
+                        Case : 4; {
+
+                            break;
+                        }
+                        Case : 5; {
+
+                            break;
+                        }
+                        Case : 6; {
+
+                            break;
+                        }
+                        Case : 7; {
+
+                            break;
+                        }
+                        Case : 8; {
+
+                            break;
+                        }
+                        Case : 9; {
+
+                            break;
+                        }
+                        Case : 10; {
+
+                            break;
+                        }
+                        Case : 11; {
+
+                            break;
+                        }
+                        Case : 12; {
+
+                            break;
+                        }
+                        Case : 13; {
+
+                            break;
+                        }
+                        Case : 14; {
+
+                            break;
+                        }
+                        Case : 14; {
+
+                            break;
+                        }
+                        Case : 15; {
+
+                            break;
+                        }
+                        Case : 16; {
+
+                            break;
+                        }
+                        Case : 17; {
+
+                            break;
+                        }
+                        Case : 18; {
+
+                            break;
+                        }
+                        Case : 19; {
+
+                            break;
+                        }
+                        Case : 20; {
+
+                            break;
+                        }
+                        Case : 21; {
+
+                            break;
+                        }
+                        Case : 22; {
+
+                            break;
+                        }
+                        Case : 23; {
+
+                            break;
+                        }
+                        Case : 24; {
+
+                            break;
+                        }
+                        Case : 25; {
+
+                            break;
+                        }
+                        Case : 26; {
+
+                            break;
+                        }
+                        Case : 27; {
+
+                            break;
+                        }
+                        Case : 28; {
+
+                            break;
+                        }
+                        Case : 29; {
+
+                            break;
+                        }
+                        Case : 30; {
+
+                            break;
+                        }
+                        Case : 31; {
+
+                            break;
+
+                        }
+                        Case : 32; {
+
+                            break;
+                        }
+                        Case : 33; {
+
+                            break;
+                        }
+                        Case : 34; {
+
+                            break;
+                        }
+                        Case : 35; {
+
+                            break;
+                        }
+                        Case : 36; {
+
+                            break;
+                        }
+                        Case : 37; {
+
+                            break;
+                        }
+                        Case : 38; {
+
+                            break;
+                        }
+                        Case : 39; {
+
+                            break;
+                        }
+                        Case : 40; {
+
+                            break;
+                        }
+                        Case : 41; {
+
+                            break;
+                        }
+                        Case : 42; {
+
+                            break;
+                        }
+                        Case : 43; {
+
+                            break;
+                        }
+                        Case : 44; {
+
+                            break;
+                        }
+                        Case : 45; {
+
+                            break;
+                        }
+                        Case : 46; {
+
+                            break;
+                        }
+                        Case : 47; {
+
+                            break;
+                        }
+                        Case : 48; {
+
+                            break;
+                        }
+                        Case : 49; {
+
+                            break;
+                        }
+                        Case : 50; {
+
+                            break;
+                        }
+                        Case : 51; {
+
+                            break;
+                        }
+                        Case : 52; {
+
+                            break;
+                        }
+
+                        
+                        
+
+                        
+
+
+
+                    }
+                }
+
+
+
+
+
+
+
+
+
+
             }
-
-
-            ImGui::Render();
-
-
-
-            constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
-            device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
-            device_context->ClearRenderTargetView(render_target_view, clear_color);
-
-            ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-            swap_chain->Present(0U, 0U);
-
-
-
-
-            // LOOOOOOOK
-              // LOOOOOOOK
-              // LOOOOOOOK
-              // LOOOOOOOK
-              // LOOOOOOOK
-              // LOOOOOOOK
-              // LOOOOOOOK
-            // PLACE DEBUG STUFF HERE FOR CONSOLE
-
-
-            }
-            
-        
-        
-
-
-        ImGui_ImplDX11_Shutdown();
-        ImGui_ImplWin32_Shutdown();
-        ImGui::DestroyContext();
-
-        if (swap_chain) {
-            swap_chain->Release();
-            swap_chain = nullptr;
         }
 
-        if (device_context) {
-            device_context->Release();
-            device_context = nullptr;
-        }
 
-        if (device) {
-            device->Release();
-            device = nullptr;
-        }
+        ImGui::Render();
 
-        if (render_target_view) {
-            render_target_view->Release();
-            render_target_view = nullptr;
-        }
 
-        DestroyWindow(window);
-        UnregisterClassW(wc.lpszClassName, wc.hInstance);
 
-        CloseHandle(handle);
+        constexpr float clear_color[4] = { 0.f, 0.f, 0.f, 0.f };
+        device_context->OMSetRenderTargets(1U, &render_target_view, nullptr);
+        device_context->ClearRenderTargetView(render_target_view, clear_color);
 
-        return TRUE;
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+        swap_chain->Present(0U, 0U);
+
 
 
     }
+
+
+
+
+
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+
+    if (swap_chain) {
+        swap_chain->Release();
+        swap_chain = nullptr;
+    }
+
+    if (device_context) {
+        device_context->Release();
+        device_context = nullptr;
+    }
+
+    if (device) {
+        device->Release();
+        device = nullptr;
+    }
+
+    if (render_target_view) {
+        render_target_view->Release();
+        render_target_view = nullptr;
+    }
+
+    DestroyWindow(window);
+    UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+    CloseHandle(handle);
+
+    return TRUE;
+
+
+}
