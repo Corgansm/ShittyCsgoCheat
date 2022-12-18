@@ -15,3 +15,11 @@ health bar
 bhop
 
 triggerbot (still shitty, there is no delay on it yet)
+
+ToDo:
+
+Nightmode
+
+Threads for stuff like triggerbot so I can add a delay on it
+
+Aimbot
