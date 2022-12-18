@@ -2,7 +2,7 @@ Change the External Include Directories to your own
 
 
 
-Features:
+## Features:
 
 Box Esp
 
@@ -20,7 +20,7 @@ triggerbot (still shitty, there is no delay on it yet)
 
 
 
-ToDo:
+## ToDo:
 
 Nightmode
 
