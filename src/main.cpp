@@ -1,10 +1,8 @@
 ﻿#include <iostream>
 #include <format>
 
-#include "memory.hpp"
-#include "Main.h"
 #include "includes.h"
-
+#include "Main.h"
 
 #include <Windows.h>
 #include <d3d11.h>
@@ -15,142 +13,7 @@
 #include <imgui_impl_win32.h>
 #include <chrono>
 #include <thread>
-
-
-
-using namespace std;
-using namespace std::chrono;
-
-
-
-
-
-
-int GetWeaponId(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) // You could add dwBaseAddr and other params here to pass with the function or just call them separately in the function itself
-{
-    DWORD pid = memory::get_process_id(L"csgo.exe");
-    const DWORD client = memory::get_module_address(pid, L"client.dll");
-    const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    DWORD dwBaseCombatWeaponIndex = memory::read<DWORD>(handle, client + offsets::dwWeaponTableIndex);
-    dwBaseCombatWeaponIndex &= 0xFFF;
-
-    DWORD dwBaseCombatWeapon = memory::read<DWORD>(handle, client + offsets::entity_list + dwBaseCombatWeaponIndex * 0x10) - 0x10;
-
-    return memory::read<int>(handle, dwBaseCombatWeapon + 0x1148 + 0x40 + 0x194);
-}
-
-
-
-
-
-struct Vector {
-    Vector() noexcept
-        : x(), y(), z() {}
-
-    Vector(float x, float y, float z) noexcept
-        : x(x), y(y), z(z) {}
-
-    Vector& operator+(const Vector& v) noexcept {
-        x += v.x;
-        y += v.y;
-        z += v.z;
-        return *this;
-    }
-
-    Vector& operator-(const Vector& v) noexcept {
-        x -= v.x;
-        y -= v.y;
-        z -= v.z;
-        return *this;
-    }
-
-    float x, y, z;
-};
-
-
-struct Vector2 {
-    float x = { }; float y = { };
-};
-
-struct ViewMatrix {
-    ViewMatrix() noexcept
-        : data() {}
-
-    float* operator[](int index) noexcept {
-        return data[index];
-    }
-
-    const float* operator[](int index) const noexcept {
-        return data[index];
-    }
-
-    float data[4][4];
-};
-
-static bool world_to_screen(const Vector& world, Vector& screen, const ViewMatrix& vm) noexcept {
-    float w = vm[3][0] * world.x + vm[3][1] * world.y + vm[3][2] * world.z + vm[3][3];
-
-    if (w < 0.001f) {
-        return false;
-    }
-
-    const float x = world.x * vm[0][0] + world.y * vm[0][1] + world.z * vm[0][2] + vm[0][3];
-    const float y = world.x * vm[1][0] + world.y * vm[1][1] + world.z * vm[1][2] + vm[1][3];
-
-    w = 1.f / w;
-    float nx = x * w;
-    float ny = y * w;
-
-    const ImVec2 size = ImGui::GetIO().DisplaySize;
-
-    screen.x = (size.x * 0.5f * nx) + (nx + size.x * 0.5f);
-    screen.y = -(size.y * 0.5f * ny) + (ny + size.y * 0.5f);
-
-    return true;
-}
-static bool world_to_screen2(const Vector2& world, Vector2& screen, const ViewMatrix& vm) noexcept {
-    float w = vm[3][0] * world.x + vm[3][1] * world.y + vm[3][2];
-
-    if (w < 0.001f) {
-        return false;
-    }
-
-    const float x = world.x * vm[0][0] + world.y * vm[0][1];
-    const float y = world.x * vm[1][0] + world.y * vm[1][1];
-
-    w = 1.f / w;
-    float nx = x * w;
-    float ny = y * w;
-
-    const ImVec2 size = ImGui::GetIO().DisplaySize;
-
-    screen.x = (size.x * 0.5f * nx) + (nx + size.x * 0.5f);
-    screen.y = -(size.y * 0.5f * ny) + (ny + size.y * 0.5f);
-
-    return true;
-}
-
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
-
-LRESULT CALLBACK window_procedure(HWND window, UINT message, WPARAM w_param, LPARAM l_param) {
-    if (ImGui_ImplWin32_WndProcHandler(window, message, w_param, l_param)) {
-        return 1L;
-    }
-
-    switch (message) {
-    case WM_DESTROY: {
-        PostQuitMessage(0);
-        return 0L;
-    }
-    }
-
-    return DefWindowProc(window, message, w_param, l_param);
-}
-
-bool create_directx(HWND window) {
-
-}
-
+#include <dos.h>
 
 
 
@@ -485,6 +348,12 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
             break;
         }
 
+
+        
+        
+    
+
+
         ImGui_ImplDX11_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
@@ -619,11 +488,9 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                 }
 
 
-
-
-
                 if (triggerbot == 1) {
                     if (GetAsyncKeyState(VK_XBUTTON1)) {
+
                         const auto& localHealth = memory::read<int32_t>(handle, LocalPlayer + offsets::Health);
                         const auto& localTeam = memory::read<uintptr_t>(handle, LocalPlayer + offsets::team_num);
                         const auto& shotsFired = memory::read<int32_t>(handle, LocalPlayer + offsets::m_iShotsFired);
@@ -645,25 +512,17 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                             goto skip_trigger;
 
 
-                        
+
                         memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
-                        
-                    }
-                };
+                    };
 
-            skip_trigger:
-
-
-
+                skip_trigger:
+                    memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4);
+                }
 
 
 
                 auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
-
-
-
-
-
 
                 if (Headdot == 1) {
                     if (world_to_screen(head_pos + Vector{ 0, 0, 0.f }, top, view_matrix) && world_to_screen(head_pos - Vector{ 0, 5.f, 0.f }, bottom, view_matrix)) {
@@ -677,76 +536,83 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     }
                 }
 
-               
-            
-            
 
-                    if (BoxESP == 1) {
-                        
-                        if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
 
-                            const float h = abs(bottom.y - top.y);
-                            int dX = (bottom.x - top.x);
-                            const float w = h * 0.35f;
-                            ImGui::GetBackgroundDrawList()->AddRect({ top.x - w, top.y }, { top.x + w, bottom.y }, ImColor(1.f, 1.f, 1.f));
-                            ImVec2 BotHealth, TopHealth;
-                            const int Health = memory::read<int>(handle, player + offsets::Health);
-                            float health_percent = Health / 100.f;
-                            float health_height = h * health_percent;
-                            TopHealth.y = bottom.y - health_height;
 
-                            
 
-                            ImGui::GetBackgroundDrawList()->AddLine({ top.x - w - 4, TopHealth.y }, {top.x - w - 4 , bottom.y} , ImColor(0.f, 1.f, 0.f));
-                        }
-                        
+                if (BoxESP == 1) {
+
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
+
+                        const float h = abs(bottom.y - top.y);
+                        int dX = (bottom.x - top.x);
+                        const float w = h * 0.35f;
+                        ImGui::GetBackgroundDrawList()->AddRect({ top.x - w, top.y }, { top.x + w, bottom.y }, ImColor(1.f, 1.f, 1.f));
+                        ImVec2 BotHealth, TopHealth;
+                        const int Health = memory::read<int>(handle, player + offsets::Health);
+                        float health_percent = Health / 100.f;
+                        float health_height = h * health_percent;
+                        TopHealth.y = bottom.y - health_height;
+
+
+
+                        ImGui::GetBackgroundDrawList()->AddLine({ top.x - w - 4, TopHealth.y }, { top.x - w - 4 , bottom.y }, ImColor(0.f, 1.f, 0.f));
                     }
-
-
-
-                    if (health == 1) {
-                        if (world_to_screen(head_pos + Vector{ 0, 0 , 0.f}, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0 , 0.f}, bottom, view_matrix)) {
-
-                            const float h = bottom.y - top.y;
-                            const float w = h * 0.35f;
-                            const float distance = _dist * 0.03f;
-                            const int test = static_cast<int>(1.5 / sqrt(distance));
-                            const int Health = memory::read<int>(handle, player + offsets::Health);
-
-                            ImGuiIO& io = ImGui::GetIO();
-                            io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
-                            ImFont* Small = io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
-
-                            std::string s = std::to_string(Health);
-                            char const* pchar = s.c_str();
-                            const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
-
-
-
-                            ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
-                            
-                        }
-                        if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
-                            const float h = bottom.y - top.y;
-                            const float w = h * 0.35f;
-                            const float distance = _dist * 0.03f;
-                            const int test = static_cast<int>(1.5 / sqrt(distance));
-                            
-                        }
-                    }
-
-
-
-
-
-
-
 
                 }
+
+
+
+                if (health == 1) {
+                    if (world_to_screen(head_pos + Vector{ 0, 0 , 0.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0 , 0.f }, bottom, view_matrix)) {
+
+                        const float h = bottom.y - top.y;
+                        const float w = h * 0.35f;
+                        const float distance = _dist * 0.03f;
+                        const int test = static_cast<int>(1.5 / sqrt(distance));
+                        const int Health = memory::read<int>(handle, player + offsets::Health);
+
+                        ImGuiIO& io = ImGui::GetIO();
+                        io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
+                        ImFont* Small = io.Fonts->AddFontFromFileTTF("C:\Windows\Fonts\calibri.ttf", 15);
+
+                        std::string s = std::to_string(Health);
+                        char const* pchar = s.c_str();
+                        const ImVec2 text_pos = ImVec2(top.x - w, top.y + h);
+
+
+
+                        ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
+
+                    }
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
+                        const float h = bottom.y - top.y;
+                        const float w = h * 0.35f;
+                        const float distance = _dist * 0.03f;
+                        const int test = static_cast<int>(1.5 / sqrt(distance));
+
+                    }
+                }
+
+
+
+
+
+
+
             }
+
+        }
+
+
+
+
+
 
 
             ImGui::Render();
+
+
 
 
 
@@ -790,6 +656,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
             render_target_view = nullptr;
         }
 
+
         DestroyWindow(window);
         UnregisterClassW(wc.lpszClassName, wc.hInstance);
 
@@ -799,3 +666,5 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
     }
+
+    
