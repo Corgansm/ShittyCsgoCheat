@@ -15,6 +15,9 @@ namespace offsets {
     constexpr auto Jump = 0x52BBC9C;
     constexpr auto dwRadarBase = 0x52369EC;
     constexpr auto ForceAttack = 0x322DD10;
+    constexpr auto dwGlowObjectManager = 0x535A9D8;
+    constexpr auto model_ambient_min = 0x5A118C;
+    constexpr auto force_update_spectator_glow = 0x3D91CA;
 
     constexpr auto m_iFov = 0x31F4;
     constexpr auto bone_matrix = 0x26A8;
@@ -37,6 +40,11 @@ namespace offsets {
     constexpr auto dwWeaponTableIndex = 0x326C;
     constexpr auto m_hViewModel = 0x3308;
     constexpr auto dwClientState_PlayerInfo = 0x52C0;
+    constexpr auto m_clrRender = 0x70;
+    constexpr auto glowIndex = 0x10488;
+    constexpr auto m_iObserverMode = 0x3388;
+    constexpr auto m_thirdPersonViewAngles = 0x31E8;
+    constexpr auto ViewmodelFov = 0xCD5624;
 }
 
 DWORD pid = memory::get_process_id(L"csgo.exe");
@@ -53,24 +61,47 @@ using namespace std;
 using namespace std::chrono;
 
 
-
-
-
-
-int GetWeaponId(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) // You could add dwBaseAddr and other params here to pass with the function or just call them separately in the function itself
+class Cham
 {
-    DWORD pid = memory::get_process_id(L"csgo.exe");
-    const DWORD client = memory::get_module_address(pid, L"client.dll");
-    const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    DWORD dwBaseCombatWeaponIndex = memory::read<DWORD>(handle, client + offsets::dwWeaponTableIndex);
-    dwBaseCombatWeaponIndex &= 0xFFF;
+public:
+    uint8_t red_;
+    uint8_t green_;
+    uint8_t blue_;
+    uint8_t alpha_;
 
-    DWORD dwBaseCombatWeapon = memory::read<DWORD>(handle, client + offsets::entity_list + dwBaseCombatWeaponIndex * 0x10) - 0x10;
+    Cham() = default;
+    constexpr Cham(uint8_t new_red, uint8_t new_green, uint8_t new_blue, uint8_t new_alpha) : red_(new_red), green_(new_green), blue_(new_blue), alpha_(new_alpha)
+    {
+        //empty
+    }
+};
 
-    return memory::read<int>(handle, dwBaseCombatWeapon + 0x1148 + 0x40 + 0x194);
-}
 
+struct glow_t
+{
+    int next_free_slot_;
+    DWORD entity_address_;
+    float red;
+    float green_;
+    float blue_;
+    float alpha_;
 
+    uint32_t pad0_[2];
+
+    float bloom_amount_;
+
+    uint32_t u1_;
+
+    bool render_occluded_;
+    bool render_unocculuded_;
+
+    bool full_bloom_render_;
+    uint8_t pad1_;
+
+    int full_bloom_stencil_test_value_;
+    int glow_style_ = 2; //0 full-body  1 inline && flicker  2 inline glow  3 flicker
+    int split_screen_shot_;
+};
 
 
 
@@ -161,26 +192,8 @@ static bool world_to_screen2(const Vector2& world, Vector2& screen, const ViewMa
     return true;
 }
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-LRESULT CALLBACK window_procedure(HWND window, UINT message, WPARAM w_param, LPARAM l_param) {
-    if (ImGui_ImplWin32_WndProcHandler(window, message, w_param, l_param)) {
-        return 1L;
-    }
 
-    switch (message) {
-    case WM_DESTROY: {
-        PostQuitMessage(0);
-        return 0L;
-    }
-    }
-
-    return DefWindowProc(window, message, w_param, l_param);
-}
-
-bool create_directx(HWND window) {
-
-}
 
 
 

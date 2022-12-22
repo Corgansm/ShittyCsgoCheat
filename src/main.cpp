@@ -7,13 +7,21 @@
 #include <Windows.h>
 #include <d3d11.h>
 #include <dwmapi.h>
-
-#include <imgui.h>
-#include <imgui_impl_dx11.h>
-#include <imgui_impl_win32.h>
 #include <chrono>
 #include <thread>
 #include <dos.h>
+#include <vector>
+
+
+
+
+
+struct Color {
+    constexpr Color(float r, float g, float b, float a = 1.f) noexcept :
+        r(r), g(g), b(b), a(a) { }
+
+    float r, g, b, a;
+};
 
 
 
@@ -22,8 +30,22 @@
 
 
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
+LRESULT CALLBACK window_procedure(HWND window, UINT message, WPARAM w_param, LPARAM l_param) {
+    if (ImGui_ImplWin32_WndProcHandler(window, message, w_param, l_param)) {
+        return 1L;
+    }
 
+    switch (message) {
+    case WM_DESTROY: {
+        PostQuitMessage(0);
+        return 0L;
+    }
+    }
+
+    return DefWindowProc(window, message, w_param, l_param);
+}
 
 
 
@@ -153,7 +175,9 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
 
+    extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
+    
 
 
 
@@ -498,6 +522,8 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                         time_t updateTimer = 0;
                         time_t curtime = time(NULL);
                         updateTimer = curtime + 1;
+                        if (GetAsyncKeyState(VK_LBUTTON))
+                            goto skip_trigger;
                         memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4);
                         const auto& crosshairID = memory::read<int32_t>(handle, LocalPlayer + offsets::Crosshair);
                         const auto& entity = memory::read<uintptr_t>(handle, client + offsets::entity_list + (crosshairID - 1) * 0x10);
@@ -517,7 +543,7 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     };
 
                 skip_trigger:
-                    memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4);
+                    auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
                 }
 
 
@@ -542,21 +568,13 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                 if (BoxESP == 1) {
 
-                    if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 10.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ -5.f, 0, 5.f }, bottom, view_matrix)) {
 
                         const float h = abs(bottom.y - top.y);
                         int dX = (bottom.x - top.x);
                         const float w = h * 0.35f;
                         ImGui::GetBackgroundDrawList()->AddRect({ top.x - w, top.y }, { top.x + w, bottom.y }, ImColor(1.f, 1.f, 1.f));
-                        ImVec2 BotHealth, TopHealth;
-                        const int Health = memory::read<int>(handle, player + offsets::Health);
-                        float health_percent = Health / 100.f;
-                        float health_height = h * health_percent;
-                        TopHealth.y = bottom.y - health_height;
 
-
-
-                        ImGui::GetBackgroundDrawList()->AddLine({ top.x - w - 4, TopHealth.y }, { top.x - w - 4 , bottom.y }, ImColor(0.f, 1.f, 0.f));
                     }
 
                 }
@@ -565,7 +583,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                 if (health == 1) {
                     if (world_to_screen(head_pos + Vector{ 0, 0 , 0.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0 , 0.f }, bottom, view_matrix)) {
-
                         const float h = bottom.y - top.y;
                         const float w = h * 0.35f;
                         const float distance = _dist * 0.03f;
@@ -582,15 +599,51 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
 
 
-                        ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(6 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
+                        ImGui::GetBackgroundDrawList()->AddText(Small, static_cast<int>(5.5 / sqrt(distance)), text_pos, IM_COL32_WHITE, pchar);
+                        ImVec2 BotHealth, TopHealth;
+                        float health_percent = Health / 100.f;
+                        float health_height = h * health_percent;
+                        TopHealth.y = bottom.y - health_height;
 
-                    }
+
+
+                        ImGui::GetBackgroundDrawList()->AddLine({ top.x - w - 4, TopHealth.y }, { top.x - w - 4 , bottom.y }, ImColor(0.f, 1.f, 0.f));
+                    }  
+                }
+
+                if (ColorTest == 1)
+                {
                     if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
-                        const float h = bottom.y - top.y;
-                        const float w = h * 0.35f;
-                        const float distance = _dist * 0.03f;
-                        const int test = static_cast<int>(1.5 / sqrt(distance));
+                       
 
+
+                        // MODEL COLOR CHANGER
+                            static constexpr Cham kEnemyColor{ 0, 0, 0 , 255 }; // black
+                            memory::write(handle, player + offsets::m_clrRender, kEnemyColor);
+                            const auto model_ambient_min = static_cast<uintptr_t>(engine + offsets::model_ambient_min - 0x2c);
+                            float brightness = -100.f;
+
+
+                        // VIEW MODEL COLOR CHANGER
+                        const auto ViewModelHandler = memory::read<int>(handle, LocalPlayer + offsets::m_hViewModel);
+                        const auto CurrentViewModelEntity = memory::read<DWORD>(handle, client + offsets::entity_list + (((ViewModelHandler & 0xFFF) - 1) * 16));
+                        memory::write<DWORD>(handle, CurrentViewModelEntity + offsets::m_clrRender, ImColor(255, 255, 255, 255));
+
+
+                        // GLOW
+                        glow_t enemyGlow;
+                        const auto glowIndex =          memory::read<int32_t>(handle, player + offsets::glowIndex);
+                        const auto glowObjectManager =  memory::read<uintptr_t>(handle, client + offsets::dwGlowObjectManager);
+                        enemyGlow.entity_address_ = player;
+                        enemyGlow = memory::read<glow_t>(handle, glowObjectManager + (0x38 * glowIndex));
+                        enemyGlow.red = 1.0f;
+                        enemyGlow.green_ = 0.7960784314f;
+                        enemyGlow.blue_ = 0.8862745098f;
+                        enemyGlow.alpha_ = 0.3f;
+                        enemyGlow.render_occluded_ = true;
+                        enemyGlow.render_unocculuded_ = false;
+                        enemyGlow.glow_style_ = 1;
+                        memory::write<glow_t>(handle, glowObjectManager + (0x38 * glowIndex) , enemyGlow);
                     }
                 }
 
@@ -655,7 +708,14 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
             render_target_view->Release();
             render_target_view = nullptr;
         }
-
+        for (int i = 1; i < 32; ++i) {
+            const auto player = memory::read<DWORD>(handle, client + offsets::entity_list + i * 0x10);
+            static constexpr Cham kEnemyColor{ 255, 255, 255 , 255 }; // black
+            memory::write(handle, player + offsets::m_clrRender, kEnemyColor);
+        }
+          const auto model_ambient_min = static_cast<uintptr_t>(engine + offsets::model_ambient_min - 0x2c);
+          float brightness = 1.f;
+          memory::write<int32_t>(handle, engine + offsets::model_ambient_min, *reinterpret_cast<uintptr_t*>(&brightness) ^ model_ambient_min);
 
         DestroyWindow(window);
         UnregisterClassW(wc.lpszClassName, wc.hInstance);
