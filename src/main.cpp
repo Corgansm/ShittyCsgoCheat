@@ -120,47 +120,12 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
     //* // just add a flash at the start to get the code back
 
-    std::cout << "Would you like a crosshair? 0 No, 1 Yes" << endl;
-
-    std::cin >> crosshair;
-
-    std::cout << "Thanks! Your crosshair is " << crosshair << endl;
-    std::cout << "" << endl;
-    Sleep(200);
+    std::cout << "Would you like stream proof settings? 0 No, 1 Yes" << endl;
+    int question;
+    std::cin >> question;
 
 
-    std::cout << "Would you like Box ESP?" << endl;
-
-    std::cin >> BoxESP;
-
-    std::cout << "Thanks! Your Box ESP is " << BoxESP << endl;
-    std::cout << "" << endl;
-
-    Sleep(200);
-
-
-    std::cout << "Would you like a Head Dot?" << endl;
-
-    std::cin >> Headdot;
-
-    std::cout << "Thanks! Your Head Dot is " << Headdot << endl;
-    std::cout << "" << endl;
-    Sleep(200);
-
-
-    std::cout << "Would you like to change your fov?" << endl;
-    std::cout << "" << endl;
-    std::cin >> FOV;
-
-    if (FOV == 1) {
-        std::cout << "Enter your Fov" << endl;
-        std::cin >> FOV2;
-        std::cout << "Thanks! Your FOV is " << FOV2 << endl;
-        std::cout << "" << endl;
-        std::cout << "Enter your Scoped Fov" << endl;
-        std::cin >> FOV3;
-
-    }
+    
 
 
 
@@ -373,8 +338,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
         }
 
 
-        
-        
     
 
 
@@ -439,6 +402,8 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     memory::read<float>(handle, LocalP + offsets::origin + 0x4),
                     memory::read<float>(handle, LocalP + offsets::origin + 0x8),
                 };
+
+               
 
                 Vector entity_pos{
                     memory::read<float>(handle, EntityP + offsets::origin),
@@ -523,26 +488,32 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                         time_t curtime = time(NULL);
                         updateTimer = curtime + 1;
                         if (GetAsyncKeyState(VK_LBUTTON))
-                            goto skip_trigger;
+                        {
+                            memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
+                        }
+
                         memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 4);
                         const auto& crosshairID = memory::read<int32_t>(handle, LocalPlayer + offsets::Crosshair);
                         const auto& entity = memory::read<uintptr_t>(handle, client + offsets::entity_list + (crosshairID - 1) * 0x10);
 
-                        if (!localHealth)
-                            goto skip_trigger;
+
 
                         if (!crosshairID || crosshairID > 64)
-                            goto skip_trigger;
+                            goto urmom;
+
+                        if (!localHealth)
+                            goto urmom;
 
                         if (localTeam == memory::read<uintptr_t>(handle, entity + offsets::team_num))
-                            goto skip_trigger;
+                            goto urmom;
+
+
 
 
 
                         memory::write<uintptr_t>(handle, client + offsets::ForceAttack, 6);
                     };
-
-                skip_trigger:
+                urmom:
                     auto feet_pos = memory::read<Vector>(handle, player + offsets::origin);
                 }
 
@@ -611,7 +582,8 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                     }  
                 }
 
-                if (ColorTest == 1)
+
+                if (question == 0)
                 {
                     if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
                        
@@ -632,24 +604,57 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                         // GLOW
                         glow_t enemyGlow;
+                        Color color{255, 203, 225, 100};
                         const auto glowIndex =          memory::read<int32_t>(handle, player + offsets::glowIndex);
                         const auto glowObjectManager =  memory::read<uintptr_t>(handle, client + offsets::dwGlowObjectManager);
                         enemyGlow.entity_address_ = player;
                         enemyGlow = memory::read<glow_t>(handle, glowObjectManager + (0x38 * glowIndex));
-                        enemyGlow.red = 1.0f;
-                        enemyGlow.green_ = 0.7960784314f;
-                        enemyGlow.blue_ = 0.8862745098f;
-                        enemyGlow.alpha_ = 0.3f;
                         enemyGlow.render_occluded_ = true;
                         enemyGlow.render_unocculuded_ = false;
                         enemyGlow.glow_style_ = 1;
+                        enemyGlow.blue_ = 0.7960784314f;
+                        enemyGlow.red = 1.f;
+                        enemyGlow.green_ = 0.7529411765f;
+                        enemyGlow.alpha_ = 1;
                         memory::write<glow_t>(handle, glowObjectManager + (0x38 * glowIndex) , enemyGlow);
+                        memory::write<BYTE>(handle, client + offsets::force_update_spectator_glow, 0xEB);
                     }
                 }
+                if (question == 0)
+                {
+                    if (world_to_screen(head_pos + Vector{ 0, 0, 11.f }, top, view_matrix) && world_to_screen(feet_pos - Vector{ 0, 0, 7.f }, bottom, view_matrix)) {
+                        bool modeVal = 1;
+                        float brightness;
 
 
 
 
+                        for (int i = 0; i < 1024; i++) {
+                            const auto entity = memory::read<std::uintptr_t>(handle, client + offsets::entity_list + i * 0x10);
+
+                            if (entity != NULL) {
+
+                                int clientNetworktable = memory::read<int>(handle, entity + 0x8);
+                                int getClientclass = memory::read<int>(handle, clientNetworktable + 2 * 0x4);
+                                int classPointer = memory::read<int>(handle, getClientclass + 0x1);
+                                int classID = memory::read<int>(handle, classPointer + 0x14);
+                                brightness = 2.f;
+
+                                const auto thisptr = static_cast<std::uintptr_t>(engine + offsets::model_ambient_min - 0x2c);   //adding brightness to random shit...good idea!
+                                memory::write<int32_t>(handle, engine + offsets::model_ambient_min, *reinterpret_cast<std::uintptr_t*>(&brightness) ^ thisptr);
+
+                                if (classID == 69) //nice
+                                {
+                                    memory::write<BYTE>(handle, entity + offsets::m_bUseCustomAutoExposureMin, 1);
+                                    memory::write<BYTE>(handle, entity + offsets::m_bUseCustomAutoExposureMax, 1);
+                                    memory::write<float>(handle, entity + offsets::m_flCustomAutoExposureMax, 0.065f);
+                                    memory::write<float>(handle, entity + offsets::m_flCustomAutoExposureMin, 0.065f);
+                                }
+
+                            }
+                        }
+                    }
+                }
 
 
 
@@ -708,14 +713,19 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
             render_target_view->Release();
             render_target_view = nullptr;
         }
-        for (int i = 1; i < 32; ++i) {
+
+        for (int i = 1; i < 32; ++i)
+        {
+            float brightness;
             const auto player = memory::read<DWORD>(handle, client + offsets::entity_list + i * 0x10);
-            static constexpr Cham kEnemyColor{ 255, 255, 255 , 255 }; // black
+            static constexpr Cham kEnemyColor{ 255, 255, 255 , 255 };
             memory::write(handle, player + offsets::m_clrRender, kEnemyColor);
         }
-          const auto model_ambient_min = static_cast<uintptr_t>(engine + offsets::model_ambient_min - 0x2c);
-          float brightness = 1.f;
-          memory::write<int32_t>(handle, engine + offsets::model_ambient_min, *reinterpret_cast<uintptr_t*>(&brightness) ^ model_ambient_min);
+            memory::write(handle, client + offsets::force_update_spectator_glow, uint8_t(0x74));
+          
+        
+
+
 
         DestroyWindow(window);
         UnregisterClassW(wc.lpszClassName, wc.hInstance);

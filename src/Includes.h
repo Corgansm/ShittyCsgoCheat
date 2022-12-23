@@ -18,6 +18,7 @@ namespace offsets {
     constexpr auto dwGlowObjectManager = 0x535A9D8;
     constexpr auto model_ambient_min = 0x5A118C;
     constexpr auto force_update_spectator_glow = 0x3D91CA;
+    constexpr auto r3dSky = 0xDC48A0;
 
     constexpr auto m_iFov = 0x31F4;
     constexpr auto bone_matrix = 0x26A8;
@@ -45,6 +46,10 @@ namespace offsets {
     constexpr auto m_iObserverMode = 0x3388;
     constexpr auto m_thirdPersonViewAngles = 0x31E8;
     constexpr auto ViewmodelFov = 0xCD5624;
+    constexpr auto m_bUseCustomAutoExposureMin = 0x9D8;
+    constexpr auto m_bUseCustomAutoExposureMax = 0x9D9;
+    constexpr auto m_flCustomAutoExposureMin = 0x9DC;
+    constexpr auto m_flCustomAutoExposureMax = 0x9E0;
 }
 
 DWORD pid = memory::get_process_id(L"csgo.exe");
@@ -99,7 +104,7 @@ struct glow_t
     uint8_t pad1_;
 
     int full_bloom_stencil_test_value_;
-    int glow_style_ = 2; //0 full-body  1 inline && flicker  2 inline glow  3 flicker
+    int glow_style_; //0 full-body  1 inline && flicker  2 inline glow  3 flicker
     int split_screen_shot_;
 };
 

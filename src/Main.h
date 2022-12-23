@@ -10,9 +10,8 @@
 	int health = 1;
 	int triggerbot = 1;
 	int ColorTest = 1;
-	int thirdperson = 1;
-	int penis = 1;
-	int penis2 = 1;
+    int nightmode = 1;
+
 
 
 // LOOK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
