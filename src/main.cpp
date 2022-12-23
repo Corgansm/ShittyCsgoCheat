@@ -604,7 +604,6 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
 
                         // GLOW
                         glow_t enemyGlow;
-                        Color color{255, 203, 225, 100};
                         const auto glowIndex =          memory::read<int32_t>(handle, player + offsets::glowIndex);
                         const auto glowObjectManager =  memory::read<uintptr_t>(handle, client + offsets::dwGlowObjectManager);
                         enemyGlow.entity_address_ = player;
@@ -612,9 +611,9 @@ INT APIENTRY WinMain(HINSTANCE instance, HINSTANCE, PSTR, INT cmd_show) {
                         enemyGlow.render_occluded_ = true;
                         enemyGlow.render_unocculuded_ = false;
                         enemyGlow.glow_style_ = 1;
-                        enemyGlow.blue_ = 0.7960784314f;
                         enemyGlow.red = 1.f;
                         enemyGlow.green_ = 0.7529411765f;
+                        enemyGlow.blue_ = 0.7960784314f;
                         enemyGlow.alpha_ = 1;
                         memory::write<glow_t>(handle, glowObjectManager + (0x38 * glowIndex) , enemyGlow);
                         memory::write<BYTE>(handle, client + offsets::force_update_spectator_glow, 0xEB);
